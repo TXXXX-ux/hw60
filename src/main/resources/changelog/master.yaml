@@ -1,0 +1,53 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: tyler
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE users (
+                  id BIGSERIAL PRIMARY KEY,
+                  email VARCHAR(255) NOT NULL,
+                  password VARCHAR(255) NOT NULL,
+                  name VARCHAR(255),
+                  about VARCHAR(255),
+                  account_type VARCHAR(50),
+                  avatar VARCHAR(255)
+              );
+              
+              CREATE TABLE vacancies (
+                  id BIGSERIAL PRIMARY KEY,
+                  title VARCHAR(255),
+                  description VARCHAR(1000),
+                  salary DOUBLE PRECISION,
+                  user_id BIGINT REFERENCES users(id)
+              );
+              
+              CREATE TABLE resumes (
+                  id BIGSERIAL PRIMARY KEY,
+                  title VARCHAR(255),
+                  description VARCHAR(1000),
+                  user_id BIGINT REFERENCES users(id)
+              );
+
+  - changeSet:
+      id: 2
+      author: tyler
+      changes:
+        - sql:
+            sql: |
+              -- вот пароль 123456 зашифрованный через bcrypt
+              INSERT INTO users (email, password, name, account_type, about) 
+              VALUES ('user@gmail.com', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', 'Тайлер', 'APPLICANT', 'Мыловар, философ, соискатель.');
+              
+              INSERT INTO users (email, password, name, account_type, about) 
+              VALUES ('admin@gmail.com', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', 'Админ', 'EMPLOYER', 'Ищем бойцов.');
+
+              INSERT INTO vacancies (title, description, salary) 
+              VALUES ('Java Developer', 'Spring Boot, Hibernate, SQL. Работа в офисе.', 80000.0);
+              
+              INSERT INTO vacancies (title, description, salary) 
+              VALUES ('Python Engineer', 'Django, Fast API. Удаленка.', 100000.0);
+              
+              INSERT INTO resumes (title, description)
+              VALUES ('Junior Java Developer', 'Знаю основы Java Core и SQL');
