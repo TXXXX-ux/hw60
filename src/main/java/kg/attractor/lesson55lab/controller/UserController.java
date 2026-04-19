@@ -1,11 +1,16 @@
 package kg.attractor.lesson55lab.controller;
 
 import jakarta.validation.Valid;
+import kg.attractor.lesson55lab.dao.ResumeDao;
 import kg.attractor.lesson55lab.dao.UserDao;
+import kg.attractor.lesson55lab.dao.VacancyDao;
 import kg.attractor.lesson55lab.dto.UserProfileDto;
+import kg.attractor.lesson55lab.model.AccountType;
 import kg.attractor.lesson55lab.model.User;
 import kg.attractor.lesson55lab.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -24,19 +29,31 @@ public class UserController {
 
     private final UserDao userDao;
     private final UserService userService;
+    private final VacancyDao vacancyDao;
+    private final ResumeDao resumeDao;
 
     @GetMapping
-    public String profilePage(Model model, Principal principal) {
+    public String profilePage(Model model, Principal principal, @RequestParam(defaultValue = "0") int page) {
         if (principal == null) {
             return "redirect:/auth/login";
         }
+
         String email = principal.getName();
         User user = userDao.findByEmail(email);
 
         if (user == null) {
             throw new RuntimeException("User not found");
         }
+
         model.addAttribute("user", user);
+        PageRequest pageable = PageRequest.of(page, 5);
+
+        if ("EMPLOYER".equals(user.getAccountType().name())) {
+            model.addAttribute("vacanciesPage", vacancyDao.findAll(pageable));
+        } else {
+            model.addAttribute("resumesPage", resumeDao.findAll(pageable));
+        }
+
         return "profile";
     }
 
@@ -69,7 +86,14 @@ public class UserController {
             model.addAttribute("reason", e.getMessage());
             return "error";
         }
-
         return "redirect:/profile";
+    }
+
+
+    @GetMapping("/companies")
+    public String companiesPage(@RequestParam(defaultValue = "0") int page, Model model) {
+        Pageable pageable = PageRequest.of(page, 5);
+        model.addAttribute("companiesPage", userDao.findByAccountType(AccountType.EMPLOYER, pageable));
+        return "companies";
     }
 }
